@@ -1,0 +1,52 @@
+econometrics methods 
+dl some data for diff countries on GDP + economic data
+model GDP and predict 
+
+groups of four ???
+
+report + code to submit
+
+
+*Data
+penn world table, purchasing power parity + national income accounts
+
+get 3 rndm countries
+get all topics except 'RGDP*'
+get 1950 -> 2000
+spreadsheet format
+
+at least 12 features and 40 years of data
+
+*Analysis
+linear reg to model gdp for each of the 3 countries
+until chapter 8 needed
+
+use first 80% to train and last 20% to perform predictions and test
+
+build several competing models using different assumptions for each country. test significance of the regression and variables.
+
+make sure to acess plausibility of assumptions and discuss them in report. try to find more suitable assumptions if needed.
+
+*Coding
+3 prog languages: Matlab, R or Python.
+not use built-in functions for stuff linked to course material.
+
+*Report
+Latex
+English/french
+not more than 20 incl everything
+no need to provide details of methods or proof of results. but need to describe what we're doing
+parts: summary(abstract), intro, describe data + exploratory analysis, brief description of methodology + results, discussion, conclusion, outlook. don't put code (use pseudo code, in appendix if long).
+
+*DEADLINE: Friday 8th Jan by noon. sumit by email (send to Suzan + cc teamates) naming convention on moodle file.
+attach: report, zip(data, code).
+
+if no reply, assume they didn't get it -> resend.
+
+*Grade:
+Each member gets the same grade
+3 elements:
+    - report (15%): clearness and does it make sense, TYPOS !!
+    - code (10%): bugless + comments + ease to read ;)
+    - analysis (75%): is the analysis relevant
+    - bonus for originality + initiative (up to 10%) 
