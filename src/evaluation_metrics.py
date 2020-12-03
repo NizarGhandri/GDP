@@ -11,6 +11,8 @@ def SST(y: np.ndarray) -> float:
     """
 
     y_avg = np.mean(y)
+    print(y_avg)
+    print(np.square(y - y_avg))
     return float(np.sum(np.square(y - y_avg)))
 
 
@@ -23,14 +25,14 @@ def M_zero(n: int) -> np.ndarray:
     :return: squared matrix M_0
     """
 
-    ones = np.ones((n, 1))
-    return np.eye(n) - np.matmul(ones, ones.T) / n
+    return np.eye(n) - np.ones((n, n)) / n
 
 
 def SST_test(y: np.ndarray) -> float:
     n = len(y)
     y_T = y.reshape((n, 1))
-    return float(np.matmul(np.matmul(y, M_zero(n)), y_T))
+    # return float(np.matmul(np.matmul(y, M_zero(n)), y_T))
+    return float(y.dot(M_zero(n).dot(y_T)))
 
 
 def SSR(y_hat: np.ndarray) -> float:
@@ -42,10 +44,10 @@ def SSR(y_hat: np.ndarray) -> float:
     """
 
     print(y_hat)
-    n = len(y)
+    n = len(y_hat)
     y_hat_T = y_hat.reshape((n, 1))
 
-    return float(np.matmul(np.matmul(y_hat, M_zero(n)), y_hat_T))
+    return float(np.dot(np.dot(y_hat, M_zero(n)), y_hat_T))
 
 
 def SSE(y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -57,7 +59,8 @@ def SSE(y: np.ndarray, y_hat: np.ndarray) -> float:
     :return: sum of squares errors
     """
     e = y - y_hat
-    return float(np.sum(np.square(e)))
+    print(e)
+    return float(np.sum(e * e))
 
 
 def R_squared(y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -86,3 +89,13 @@ def adjusted_R_squared(y: np.ndarray, y_hat: np.ndarray, n_features: int) -> flo
     r_squared = R_squared(y, y_hat)
 
     return 1 - (1 - r_squared) * (n - 1) / (n - n_features)
+
+
+def get_beta(X, y):
+    a = np.inv(np.dot(X.T, X))
+    b = np.dot(X.T, y)
+    return np.dot(a, b)
+
+
+l1 = np.array([1, 2, 3, 4, 5])
+# X1 = np.array([])
