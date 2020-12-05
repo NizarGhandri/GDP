@@ -50,3 +50,7 @@ Each member gets the same grade
     - code (10%): bugless + comments + ease to read ;)
     - analysis (75%): is the analysis relevant
     - bonus for originality + initiative (up to 10%) 
+
+
+
+"test"
