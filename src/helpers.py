@@ -43,6 +43,12 @@ def split(X, y, rate=0.8):
     n = int(len(y)*rate)
     return X[:n], X[n:], y[:n], y[n:]
 
-
+def oner(x):
+    """
+    Creates a column of ones for x
+    """
+    oner = np.ones((len(x),1))
+    x = np.hstack((oner,x))
+    return x
 
 

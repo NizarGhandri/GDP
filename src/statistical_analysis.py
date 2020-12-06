@@ -9,7 +9,7 @@ def correlation_test(X, threshold=0.95):
     return correlation_matrix
 
 
-def confidenceinterval(x, beta, var, tolerance=1-0.95):
+def confidenceinterval(x, beta, var, tolerance):
    """
    calculating confidence interval
    """
@@ -20,7 +20,7 @@ def confidenceinterval(x, beta, var, tolerance=1-0.95):
    # tolerance - which tolerance level do you want
     
    degoffree=len(x)-len(x[0])
-   tstatvalue=stats.t.ppf(1-tolerance, degoffree)
+   tstatvalue=stats.t.ppf(1-tolerance/2, degoffree)
    
    interval = np.zeros((len(x[0]),2))
     
