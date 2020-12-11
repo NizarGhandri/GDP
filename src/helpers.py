@@ -1,4 +1,7 @@
 import numpy as np
+from sklearn.model_selection import KFold
+from src.regressions import ridge_regression
+from src.evaluation_metrics import R_squared
 
 def X_y_from_dataset (dataset): 
     """
@@ -33,22 +36,28 @@ def add_bias(X, b=1):
     """
     Concatenates a bias to the the dataset
     """
-    return np.hstack([np.ones(len(X), 1), X])
+    return np.hstack([b*np.ones((len(X), 1)), X])
 
 
 def split(X, y, rate=0.8):
     """
-    Splits dataset into training and test using the Year feature and a rate f 80%
+    Splits dataset into training and test using the Year feature and a rate of 80%
     """
     n = int(len(y)*rate)
     return X[:n], X[n:], y[:n], y[n:]
 
-def oner(x):
-    """
-    Creates a column of ones for x
-    """
-    oner = np.ones((len(x),1))
-    x = np.hstack((oner,x))
-    return x
+def test_ridge (X_train, y_train, X_test, y_test, lambda_): 
+    return R_squared(y_test, predict(X_test, ridge_regression(X_train, y_train, lambda_)))
+
+def cross_val_ridge(X, y, linear_space):
+    kf = KFold(n_splits=5, shuffle=True)
+    results = []
+    for lambda_ in linear_space: 
+        mean = np.mean([test_ridge(X[train_index], y[train_index], X[test_index], y[test_index], lambda_) \
+         for train_index, test_index in kf.split(X)])
+        results.append(mean)
+    return np.argmax(results), results
+    
+    
 
 

@@ -10,3 +10,12 @@ def least_squares(X, y):
 
 
 
+def ridge_regression(tx, y, lambda_):
+    """
+    Ridge regression using normal equations
+    """
+    x_transpose = tx.T
+    left = x_transpose.dot(tx) + lambda_ * np.identity(tx.shape[1])
+    right = x_transpose.dot(y)
+    w=np.linalg.solve(left, right)
+    return w

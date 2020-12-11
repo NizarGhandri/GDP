@@ -11,8 +11,6 @@ def SST(y: np.ndarray) -> float:
     """
 
     y_avg = np.mean(y)
-    # print(y_avg)
-    # print(np.square(y - y_avg))
     return float(np.sum(np.square(y - y_avg)))
 
 
@@ -50,7 +48,6 @@ def SSE(y: np.ndarray, y_hat: np.ndarray) -> float:
     :return: sum of squares errors
     """
     e = y - y_hat
-    # print(e)
     return float(np.sum(e * e))
 
 
@@ -62,7 +59,6 @@ def R_squared(y: np.ndarray, y_hat: np.ndarray) -> float:
     :param y_hat: prediction
     :return: coefficient of determination (R²)
     """
-
     return 1 - SSE(y, y_hat) / SST(y)
 
 
@@ -77,6 +73,6 @@ def adjusted_R_squared(y: np.ndarray, y_hat: np.ndarray, n_features: int) -> flo
     """
 
     n = len(y)
+    assert(n > n_features + 1)
     r_squared = R_squared(y, y_hat)
-
-    return 1 - (1 - r_squared) * (n - 1) / (n - n_features)
+    return 1 - (1 - r_squared) * (n - 1) / (n - n_features - 1)

@@ -19,15 +19,29 @@ def confidenceinterval(x, beta, var, tolerance):
    # var - calculated variance (can differ dependent on model)
    # tolerance - which tolerance level do you want
     
-   degoffree=len(x)-len(x[0])
-   tstatvalue=stats.t.ppf(1-tolerance/2, degoffree)
-   
-   interval = np.zeros((len(x[0]),2))
-    
-   interval[:,0]=np.squeeze(beta-tstatvalue*np.sqrt(var))
+    degoffree=len(x)-len(x[0])
+    tstatvalue=stats.t.ppf(1-tolerance/2, degoffree)
 
-   interval[:,1]=np.squeeze(beta+tstatvalue*np.sqrt(var))
+    interval = np.zeros((len(x[0]),2))
+
+    interval[:,0]=np.squeeze(beta-tstatvalue*np.sqrt(var))
+
+    interval[:,1]=np.squeeze(beta+tstatvalue*np.sqrt(var))
    
    
    
    return interval
+
+
+def subset_iterator (X_columns):
+    """
+    To use this to find a all the subsets of X you do the following: 
+    for columns in subset_iterator(range(X.shape[1])):
+        X[:, columns] # this will be your new dataset out of the subsets 
+        
+    
+    """
+    return chain(*map(lambda x: combinations(X_columns, x), range(0, len(X_columns)+1)))
+   
+       
+    
