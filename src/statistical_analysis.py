@@ -4,33 +4,52 @@ from scipy import stats
 
 
 def correlation_test(X, threshold=0.95):
+    # doesn't work yet
     correlation_matrix = np.corrcoef(X)
     correlation_matrix < threshold 
     return correlation_matrix
 
 
-def confidenceinterval(x, beta, var, tolerance):
-   """
-   calculating confidence interval
-   """
-   # giving back a n x 2 matrix, on the first column lower bound, second column upper bound
-   # x - explanatory variables
-   # beta - parameteres
-   # var - calculated variance (can differ dependent on model)
-   # tolerance - which tolerance level do you want
+def confidence_interval(x_shape, variable, var, tolerance=0.95):
+    """
+    calculating confidence interval
+    """
+    # giving back a n x 2 matrix, on the first column lower bound, second column upper bound
+    # x - explanatory variables
+    # beta - parameteres
+    # var - calculated variance (can differ dependent on model)
+    # tolerance - which tolerance level do you want
+
+    n, m = x_shape
+    degoffree= n - m
+    alpha=stats.t.ppf(1-tolerance/2, degoffree)*np.sqrt(var)
+    return variable-alpha, variable+alpha
+
+
+def standard_error_regression (y, y_hat, X_shape): 
+    """
+    calculating Standard Error
+    """
+    e = y-y_hat
+    return (e.T@e)/(X_shape[0] - X_shape[1])
+
+
+def variance_least_squares_weights (y, y_hat, X):
+    """
+    calculating variance of least squares
+    """ 
+    return standard_error_regression(y, y_hat, X.shape)*np.reshape(np.diag(np.linalg.inv(X.T@X)), (-1, 1))
+
+# def variance_least_squares_line (y, y_hat, X):
+#     var = (X - np.mean(X, axis=0))**2
+#     return (var/sum(var) + 1/X.shape[0]) * standard_error_regression (y, y_hat, X.shape)
     
-    degoffree=len(x)-len(x[0])
-    tstatvalue=stats.t.ppf(1-tolerance/2, degoffree)
-
-    interval = np.zeros((len(x[0]),2))
-
-    interval[:,0]=np.squeeze(beta-tstatvalue*np.sqrt(var))
-
-    interval[:,1]=np.squeeze(beta+tstatvalue*np.sqrt(var))
-   
-   
-   
-   return interval
+    
+def variance_least_squares_line (y, y_hat, X):
+    """
+    calculating variance of least squares
+    """ 
+    return standard_error_regression(y, y_hat, X.shape)*(np.reshape(np.diag(X@np.linalg.inv(X.T@X)@X.T), (-1, 1)))
 
 
 def subset_iterator (X_columns):
