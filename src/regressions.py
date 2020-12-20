@@ -3,22 +3,24 @@ import numpy as np
 
 def least_squares(X, y):
     """
-    Compute least squares with np.solve for more numerical stability
-    :param X:
-    :param y:
-    :return:
+    Compute Least Squares Estimator. We use np.solve for more numerical stability.
+
+    :param X: training features
+    :param y: training labels
+    :return: least squares weights
     """
     X_t = X.T
     return np.linalg.solve(X_t.dot(X), X_t.dot(y))
 
 
-def ridge_regression(tx, y, lambda_):
+def ridge_regression(X, y, lambda_):
     """
     Ridge regression using normal equations
-    :param tx:
-    :param y:
-    :param lambda_:
-    :return:
+
+    :param X: training features
+    :param y: training lables
+    :param lambda_: penalty term
+    :return: ridge regression weights
     """
     x_transpose = tx.T
     left = x_transpose.dot(tx) + lambda_ * np.identity(tx.shape[1])
