@@ -15,7 +15,7 @@ def least_squares(X, y):
 
 def ridge_regression(X, y, lambda_):
     """
-    Ridge regression using normal equations
+    Ridge regression using normal equations.
 
     :param X: training features
     :param y: training lables
