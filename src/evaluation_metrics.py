@@ -9,7 +9,6 @@ def SST(y: np.ndarray) -> float:
     :param y: real data
     :return: Total Sum of Squares
     """
-
     y_avg = np.mean(y)
     return float(np.sum(np.square(y - y_avg)))
 
@@ -22,7 +21,6 @@ def M_zero(n: int) -> np.ndarray:
     :param n: dimension of the matrix
     :return: squared matrix M_0
     """
-
     return np.eye(n) - np.ones((n, n)) / n
 
 
@@ -33,9 +31,7 @@ def SSR(y_hat: np.ndarray) -> float:
     :param y_hat: data matrix
     :return: regression sum of squares
     """
-
     n = y_hat.shape[0]
-
     return float(y_hat.T @ M_zero(n) @ y_hat)
 
 
@@ -71,7 +67,6 @@ def adjusted_R_squared(y: np.ndarray, y_hat: np.ndarray, n_features: int) -> flo
     :param n_features: number of features (K)
     :return: adjusted coefficient of determination (R²)
     """
-
     n = len(y)
     assert(n > n_features + 1)
     r_squared = R_squared(y, y_hat)
