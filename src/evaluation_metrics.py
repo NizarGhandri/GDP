@@ -68,6 +68,64 @@ def adjusted_R_squared(y: np.ndarray, y_hat: np.ndarray, n_features: int) -> flo
     :return: adjusted coefficient of determination (R²)
     """
     n = len(y)
-    assert(n > n_features + 1)
+    assert (n > n_features + 1)
     r_squared = R_squared(y, y_hat)
     return 1 - (1 - r_squared) * (n - 1) / (n - n_features - 1)
+
+
+def MSE(y: np.ndarray, y_hat: np.ndarray) -> float:
+    """
+    Compute the Mean Square Error.
+
+    :param y: real data
+    :param y_hat: prediction
+    :return: MSE
+    """
+    return SSE(y, y_hat) / len(y)
+
+
+def RMSE(y: np.ndarray, y_hat: np.ndarray) -> float:
+    """
+    Compute the Root Mean Square Error.
+
+    :param y: real data
+    :param y_hat: prediction
+    :return: RMSE
+    """
+    return np.sqrt(MSE(y, y_hat))
+
+
+def MAE(y: np.ndarray, y_hat: np.ndarray) -> float:
+    """
+    Compute the Mean Absolute Error.
+
+    :param y: real data
+    :param y_hat: prediction
+    :return: MAE
+    """
+    e = y - y_hat
+    return np.sum(np.abs(e)) / len(e)
+
+
+def theil_U(y: np.ndarray, y_hat: np.ndarray) -> float:
+    """
+    Compute the Theil U statistic (scale invariant measure).
+
+    :param y: real data
+    :param y_hat: prediction
+    :return: Theil U statistic
+    """
+    return np.sqrt(MSE(y, y_hat) / MSE(y, np.zeros_like(y)))
+
+
+def information_criteria(y: np.ndarray, y_hat: np.ndarray, n_features: int, ic_type=None) -> float:
+    if ic_type is None:
+        raise ValueError("Information Criteria type not defined. `ic_type` is None, must be 'akaike' or 'bayesian'.")
+    e = y - y_hat
+    n = len(e)
+    if ic_type == 'akaike':
+        return np.log(e @ e.T / n) + 2 * n_features / n
+    elif ic_type == 'bayesian':
+        return np.log(e @ e.T / n) + n_features * np.log(n) / n
+    else:
+        raiseValueError("Invalid Information Criteria type. `ic_type` must be 'akaike' or 'bayesian'.")
