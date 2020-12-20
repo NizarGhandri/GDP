@@ -119,6 +119,15 @@ def theil_U(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 
 def information_criteria(y: np.ndarray, y_hat: np.ndarray, n_features: int, ic_type=None) -> float:
+    """
+    Computes information criteria, either 'akaike' or 'bayesian'.
+
+    :param y: real data
+    :param y_hat: prediction
+    :param n_features: number of features (K)
+    :param ic_type: information criteria type, either 'akaike' or 'bayesian'
+    :return: ic_type information criteria
+    """
     if ic_type is None:
         raise ValueError("Information Criteria type not defined. `ic_type` is None, must be 'akaike' or 'bayesian'.")
     e = y - y_hat
