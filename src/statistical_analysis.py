@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.stats import t
 from scipy import stats
+from itertools import chain, combinations
 
 
 def correlation_test(X, threshold=0.95):
@@ -86,4 +87,5 @@ def subset_iterator(X_columns):
     :param X_columns:
     :return:
     """
-    return chain(*map(lambda x: combinations(X_columns, x), range(0, len(X_columns) + 1)))
+    rnge = range(X_columns)
+    return chain(*map(lambda x: combinations(rnge, x), range(2, X_columns + 1)))
