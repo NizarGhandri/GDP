@@ -23,7 +23,7 @@ def ridge_regression(X: np.ndarray, y: np.ndarray, lambda_: float) -> np.ndarray
     :return: ridge regression weights
     """
     x_transpose = X.T
-    left = x_transpose.dot(tx) + lambda_ * np.identity(tx.shape[1])
+    left = x_transpose.dot(X) + lambda_ * np.identity(X.shape[1])
     right = x_transpose.dot(y)
     w = np.linalg.solve(left, right)
     return w

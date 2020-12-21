@@ -61,7 +61,7 @@ def add_bias(X: np.ndarray, b: float = 1) -> np.ndarray:
     return np.hstack([b * np.ones((len(X), 1)), X])
 
 
-def train_test_split(X, y, proportion=0.8) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+def train_test_split(X, y, proportion=0.8, shuffle=False) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
     """
     Split dataset into training and test using the Year feature and a rate of 80%.
 
@@ -71,7 +71,16 @@ def train_test_split(X, y, proportion=0.8) -> (np.ndarray, np.ndarray, np.ndarra
     :return: train and test features and labels
     """
     n = int(len(y) * proportion)
-    return X[:n], X[n:], y[:n], y[n:]
+
+    if shuffle:
+        rng = np.random.default_rng()
+        indices = np.arange(len(y))
+        rng.shuffle(indices)
+        train = indices[:n]
+        test = indices[n:]
+        return X[train], X[test], y[train], y[test]
+    else:
+        return X[:n], X[n:], y[:n], y[n:]
 
 
 def test_ridge_reg(X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray, y_test: np.ndarray,
@@ -90,7 +99,7 @@ def test_ridge_reg(X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray,
 
 
 def cross_val_ridge(X: np.ndarray, y: np.ndarray, min_lambda: float = 0, max_lambda: float = 0,
-                    step: int = 0) -> float:
+                    n_points: int = 1) -> float:
     """
     Find best lambda using cross validation
 
@@ -102,7 +111,7 @@ def cross_val_ridge(X: np.ndarray, y: np.ndarray, min_lambda: float = 0, max_lam
     :return: best lambda value
     """
     kf = KFold(n_splits=5, shuffle=True)
-    lambdas = np.linspace(min_lambda, max_lambda, step)
+    lambdas = np.linspace(min_lambda, max_lambda, n_points)
 
     r_2 = []
     for lambda_ in lambdas:
@@ -110,7 +119,8 @@ def cross_val_ridge(X: np.ndarray, y: np.ndarray, min_lambda: float = 0, max_lam
                         for train_index, test_index in kf.split(X)])
         r_2.append(mean)
 
-    best_lambda_index = np.argmax(r_2)[0]
+    best_lambda_index = np.argmax(r_2)
+    
     best_lambda = lambdas[best_lambda_index]
 
     plt.plot(lambdas, r_2)
