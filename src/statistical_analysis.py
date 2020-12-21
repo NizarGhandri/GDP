@@ -2,6 +2,8 @@ import numpy as np
 from scipy.stats import t
 from scipy import stats
 from itertools import chain, combinations
+from sklearn.linear_model import LinearRegression
+from scipy.stats import chi2
 
 
 def correlation_test(X, threshold=0.95):
@@ -34,7 +36,7 @@ def confidence_interval(x_shape, variable, var, tolerance=0.95):
 
     n, m = x_shape
     degoffree = n - m
-    alpha = stats.t.ppf(1 - tolerance / 2, degoffree) * np.sqrt(var)
+    alpha = stats.t.ppf(1-(1 - tolerance) / 2, degoffree) * np.sqrt(var)
     return variable - alpha, variable + alpha
 
 
@@ -89,3 +91,123 @@ def subset_iterator(X_columns):
     """
     rnge = range(X_columns)
     return chain(*map(lambda x: combinations(rnge, x), range(2, X_columns + 1)))
+
+
+
+def ttest(x_shape, betak, vark, tolerance=0.95):
+    """
+    Computes the statistical significance of a specific variable
+    :x_shape: shape of the observed matrix
+    :betak: estimator of the specific parameter
+    :vark: variance of specific parameter
+    
+    :return: true if it is statistically significant, false if it is not
+    """
+
+    n,m=x_shape
+    degoffree=n-m
+    tt=stats.t.ppf(1-(1-tolerance)/2,degoffree)
+    tk=betak/np.sqrt(vark)
+    if tk>tt:
+        test=True    
+    else:
+        test=False
+        
+    return test
+    
+
+    
+def breusch_pagan_test(x, y):
+    '''
+    taken from:
+    https://stackoverflow.com/questions/30061054/ols-breusch-pagan-test-in-python
+    Breusch-Pagan test for heteroskedasticity in a linear regression model:
+    H_0 = No heteroskedasticity.
+    H_1 = Heteroskedasticity is present.
+
+    Inputs:
+    x = a numpy.ndarray containing the predictor variables. Shape = (nSamples, nPredictors).
+    y = a 1D numpy.ndarray containing the response variable. Shape = (nSamples, ).
+
+    Outputs a list containing three elements:
+    1. the Breusch-Pagan test statistic.
+    2. the p-value for the test.
+    3. the test result.
+    '''
+    y = y.ravel()
+    if y.ndim != 1:
+        raise SystemExit('Error: y has more than 1 dimension.')
+    if x.shape[0] != y.shape[0]:
+        raise SystemExit('Error: the number of samples differs between x and y.')
+    else:
+        n_samples = y.shape[0]
+
+    # fit an OLS linear model to y using x:
+    lm = LinearRegression()
+    lm.fit(x, y)
+
+    # calculate the squared errors:
+    err = (y - lm.predict(x))**2
+
+    # fit an auxiliary regression to the squared errors:
+    # why?: to estimate the variance in err explained by x
+    lm.fit(x, err)
+    pred_err = lm.predict(x)
+    del lm
+
+    # calculate the coefficient of determination:
+    ss_tot = sum((err - np.mean(err))**2)
+    ss_res = sum((err - pred_err)**2)
+    r2 = 1 - (ss_res / ss_tot)
+    del err, pred_err, ss_res, ss_tot
+
+    # calculate the Lagrange multiplier:
+    LM = n_samples * r2
+    del r2
+
+    # calculate p-value. degrees of freedom = number of predictors.
+    # this is equivalent to (p - 1) parameter restrictions in Wikipedia entry.
+    pval = chi2.sf (LM, x.shape[1])
+
+    if pval < 0.05:
+        test_result = 'Heteroskedasticity present at 95% CI.'
+    else:
+        test_result = 'No significant heteroskedasticity.'
+    return [LM, pval, test_result]
+
+
+
+def VIF(x):
+    """
+    calculates the Variance Inflation Factor, the bigger the worse the multicolinearity
+    :param x: Observed matrix
+    :return: VIF
+    """
+    
+    shape=x.shape
+    shape=shape[1]
+    xtemp2 = copy.copy(x)
+    VIFF=np.zeros(shape)
+    
+    for i in range(0, shape):
+        if i==0:
+            x0=xtemp2[:,1:]
+            y0=xtemp2[:,0]
+        elif i==shape:
+            x0=xtemp2[:,0:-1]
+            y0=xtemp2[:,shape]
+        else:
+            x1=xtemp2[:,:i]
+            x2=xtemp2[:,i+1:]
+            x0=np.hstack((x1,x2))
+            y0=xtemp2[:,i]
+    
+        beta=np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x0),x0)),np.transpose(x0)),y0)
+        y_hat=np.dot(x0,beta)
+        VIFF[i]=1/(1-R_squared(y0, y_hat))
+        
+    
+    
+    return VIFF
+
+
