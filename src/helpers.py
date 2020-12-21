@@ -70,7 +70,7 @@ def train_test_split(X, y, proportion=0.8) -> (np.ndarray, np.ndarray, np.ndarra
     :param proportion: proportion of train from full dataset
     :return: train and test features and labels
     """
-    n = int(len(y) * rate)
+    n = int(len(y) * proportion)
     return X[:n], X[n:], y[:n], y[n:]
 
 
