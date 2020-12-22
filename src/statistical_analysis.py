@@ -4,7 +4,8 @@ from scipy import stats
 from itertools import chain, combinations
 from sklearn.linear_model import LinearRegression
 from scipy.stats import chi2
-
+from numpy import linalg as LA
+import copy
 
 def correlation_test(X, threshold=0.95):
     """
@@ -175,6 +176,14 @@ def breusch_pagan_test(x, y):
         test_result = 'No significant heteroskedasticity.'
     return [LM, pval, test_result]
 
+def condition_number(x):
+    """
+    calculates the Condition Number, the bigger the worse the multicolinearity, starts to become a problem from 20 on
+    :param x: Observed matrix
+    :return: condition number
+    """
+    w, v = LA.eig(np.dot(np.transpose(x),x))
+    return np.sqrt(np.max(w)/np.min(w))
 
 
 def VIF(x):
@@ -206,8 +215,122 @@ def VIF(x):
         y_hat=np.dot(x0,beta)
         VIFF[i]=1/(1-R_squared(y0, y_hat))
         
-    
-    
     return VIFF
 
 
+
+def general_to_simple(x,y,tolerance=0.95):
+    """
+    Compute the model from the general to simple approach
+
+    :param X: The matrix of observables
+    :param y: The outcome matrix
+    :return: model from the general to simple approach
+    """
+    shape=np.shape(x)
+    xtemp2 = copy.copy(x)
+    a=np.zeros(shape[1])
+
+    for f in range(shape[1]):
+        
+        for i in range(shape[1]-f):
+            
+            if i==0:
+                x0=xtemp2[:,1:]
+
+            elif i==(shape[1]-f):
+                x0=xtemp2[:,0:-1]
+
+            else:
+                x1=xtemp2[:,:i]
+                x2=xtemp2[:,i+1:]
+                x0=np.hstack((x1,x2))
+
+            beta_reduced = least_squares(x0, y)
+            y_hat_reduced=np.dot(x0,beta_reduced)
+            a[i] = R_squared(y, y_hat_reduced)
+
+        ind = np.argmax(a[:])
+        beta_full = least_squares(xtemp2, y)
+        y_hat_full=np.dot(xtemp2,beta_full)
+        var = variance_least_squares_line(y, y_hat_full, xtemp2)
+        shapex2=np.shape(xtemp2)
+        error=np.dot(np.transpose(y-np.dot(xtemp2,beta_full)),y-np.dot(xtemp2,beta_full))/(shapex2[0]-shapex2[1])
+        var=np.linalg.inv(np.dot(np.transpose(xtemp2),xtemp2))*error
+        stat_sign=ttest(np.shape(xtemp2), beta_full[ind], var[ind,ind], tolerance=0.95)
+
+        if stat_sign:
+            return xtemp2
+            break
+        else:
+            xtemp2 = np.delete(xtemp2, ind, axis=1)
+            a=np.zeros(shape[1]-f)
+            
+        del x0, x1, x2, beta_reduced, y_hat_reduced, ind, beta_full, y_hat_full, var, stat_sign
+
+    
+    return xtemp2
+
+
+
+def simple_to_general(x,y,tolerance=0.95):
+    """
+    Compute the model from the simple to general approach
+    :param X: The matrix of observables
+    :param y: The outcome matrix
+    
+    :return: model from the simple to general approach
+    """
+    
+    shape=np.shape(x)
+    xtemp2 = copy.copy(x)
+    a=np.zeros(shape[1])
+
+    for f in range(shape[1]-1):
+        for i in range(shape[1]-f):
+            if f==0:
+                x0=xtemp2[:,i]
+                x0=x0.transpose()
+                x0=np.expand_dims(x0, axis=1)
+                beta_reduced = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x0),x0)),np.transpose(x0)),y)
+                y_hat_reduced=np.dot(x0,beta_reduced)
+                a[i] = R_squared(y, y_hat_reduced)
+
+            else:
+                x1=xtemp2[:,i]
+                x1=np.expand_dims(x1, axis=1)
+                x2=np.hstack((x0,x1))
+                beta_reduced = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x2),x2)),np.transpose(x2)),y)
+                y_hat_reduced=np.dot(x2,beta_reduced)
+                a[i] = R_squared(y, y_hat_reduced)                  
+        if f==0:
+            stat_sign=False
+            ind = np.argmax(a[:])
+            x0=xtemp2[:,ind]
+            x0=np.expand_dims(x0, axis=1)
+
+        else:
+            ind = np.argmax(a[:])
+            x1=xtemp2[:,ind]
+            x1=np.expand_dims(x1, axis=1)
+            x2=np.hstack((x0,x1))
+            beta_full = least_squares(x2, y)
+            y_hat_full=np.dot(x2,beta_full)
+            shapex2=np.shape(x2)
+            error=np.dot(np.transpose(y-np.dot(x2,beta_full)),y-np.dot(x2,beta_full))/(shapex2[0]-shapex2[1])
+            var=np.linalg.inv(np.dot(np.transpose(x2),x2))*error
+            stat_sign=ttest(np.shape(x2), beta_full[f,0], var[f,f], tolerance=0.95)    
+            del x1, beta_full,y_hat_full,var, error, shapex2
+
+        if stat_sign:
+            return x2
+        else:
+            xtemp2 = np.delete(xtemp2, ind, axis=1)
+            if f==0:
+                r=1
+                a=np.zeros(shape[1])
+            else:
+                x0=x2
+                a=np.zeros(shape[1])
+
+    return x0
