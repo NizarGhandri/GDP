@@ -89,7 +89,7 @@ def subset_iterator(X_columns):
 def best_subset(X, y): 
     scores = []
     subsets = []
-    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle = False)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle = True)
     for i in subset_iterator(X.shape[1]):
         ws = least_squares(X_train[:, i], y_train)
         scores.append(R_squared(y_test, predict(X_test[:, i], ws)))
