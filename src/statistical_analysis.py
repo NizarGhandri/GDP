@@ -5,6 +5,7 @@ from numpy import linalg
 from scipy import stats
 from scipy.stats import chi2
 
+from src.regressions import least_squares
 from src.evaluation_metrics import *
 from src.helpers import *
 import math
@@ -14,7 +15,7 @@ def confidence_interval(n: int, k: int, variable: np.ndarray, variance: np.ndarr
                         percentage: float = 0.95) -> Tuple[np.ndarray, np.ndarray]:
     """
     Computes the confidence interval.
-    
+
     :param n: number of datapoints
     :param k: number of features
     :param variable: variable for which the CI is computed
@@ -67,9 +68,9 @@ def variance_least_squares_line(X: np.ndarray, y: np.ndarray, y_hat: np.ndarray)
 
 def subset_iterator(n_features: int):
     """
-    To use this to find a all the subsets of X you do the following: 
+    To use this to find a all the subsets of X you do the following:
     for columns in subset_iterator(range(X.shape[1])):
-        X[:, columns] # this will be your new dataset out of the subsets 
+        X[:, columns] # this will be your new dataset out of the subsets
 
     :param n_features: number of features
     :return: all possible combinations of numbers from 0 to n_features
@@ -127,11 +128,11 @@ def breusch_pagan_test(X: np.ndarray, y: np.ndarray) -> Tuple[float, float, str]
     """
     taken from:
     https://stackoverflow.com/questions/30061054/ols-breusch-pagan-test-in-python
-    
+
     Breusch-Pagan test for heteroskedasticity in a linear regression model:
     H_0 = No heteroskedasticity.
     H_1 = Heteroskedasticity is present.
-    
+
     :param X: features
     :param y: labels
     :return: Breusch-Pagan test statistic, the p-value for the test and the test result.
@@ -177,7 +178,7 @@ def condition_number(X: np.ndarray) -> float:
     """
     Computes the Condition Number. The bigger it is, the worse the multicolinearity, starts to become a problem from
     20 on.
-    
+
     :param X: Observed matrix
     :return: condition number
     """
@@ -188,7 +189,7 @@ def condition_number(X: np.ndarray) -> float:
 def VIF(X: np.ndarray) -> np.ndarray:
     """
     Computes the Variance Inflation Factor, the bigger the worse the multicolinearity.
-    
+
     :param X: Observed matrix
     :return: VIF
     """
@@ -233,9 +234,6 @@ def general_to_simple(X: np.ndarray, y: np.ndarray) -> List[int]:
     # keep on deleting features while they are not relevant and there are still more than 1 feature remaining
     while (not ttest_result) and len(indices) > 1:
 
-        # keep only the features in indices
-        X_temp = np.copy(X[:, indices])
-
         # initialize the candidate feature to be removed and its r squared
         index_to_delete = indices[0]
         r_2 = -math.inf
@@ -245,7 +243,7 @@ def general_to_simple(X: np.ndarray, y: np.ndarray) -> List[int]:
             new_indices = list(np.copy(indices))
             new_indices.remove(i)
 
-            x0 = X_temp[:, new_indices]
+            x0 = X[:, new_indices]
 
             beta_reduced = least_squares(x0, y)
 
@@ -255,14 +253,17 @@ def general_to_simple(X: np.ndarray, y: np.ndarray) -> List[int]:
                 index_to_delete = i
                 r_2 = r
 
+        # keep only the features in indices
+        X_temp = np.copy(X[:, indices])
+
         # test the relevance of the feature to be removed
         beta = least_squares(X_temp, y)
         y_hat = predict(X_temp, beta)
 
         var = variance_least_squares_weights(X_temp, y, y_hat)
 
-        ttest_result = ttest(np.shape(X_temp), beta[index_to_delete], var[index_to_delete],
-                             tolerance=0.95)
+        ttest_result = ttest(np.shape(X_temp), beta[indices.index(index_to_delete)],
+                             var[indices.index(index_to_delete)], tolerance=0.95)
 
         # if the feature is irrelevant, remove it from indices
         if not ttest_result:
@@ -294,7 +295,7 @@ def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
     while ttest_result and len(indices) < k:
 
         # initialize the feature to be added and its r squared
-        index_to_add = indices[0]
+        index_to_add = remaining_indices[0]
         r_2 = -math.inf
 
         # find the feature that yields the largest r squared if added
@@ -326,8 +327,8 @@ def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
 
             var = variance_least_squares_weights(X_temp, y, y_hat)
 
-            ttest_result = ttest(np.shape(X_temp), beta[index_to_delete], var[index_to_delete],
-                                 tolerance=0.95)
+            ttest_result = ttest(np.shape(X_temp), beta[indices.index(index_to_delete)],
+                                 var[indices.index(index_to_delete)], tolerance=0.95)
 
             # if the feature turn out to be irrelevant, remove it
             if not ttest_result:
