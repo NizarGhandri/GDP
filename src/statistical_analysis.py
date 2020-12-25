@@ -5,8 +5,9 @@ from numpy import linalg
 from scipy import stats
 from scipy.stats import chi2
 
-from evaluation_metrics import *
-from helpers import *
+from src.evaluation_metrics import *
+from src.helpers import *
+import math
 
 
 def confidence_interval(n: int, k: int, variable: np.ndarray, variance: np.ndarray,
@@ -74,10 +75,10 @@ def subset_iterator(n_features: int):
     :return: all possible combinations of numbers from 0 to n_features
     """
     rnge = range(n_features)
-    return chain(*map(lambda x: combinations(rnge, x), range(2, n_features + 1)))
+    return chain(*map(lambda x: combinations(rnge, x), range(3, n_features + 1)))
 
 
-def best_subset(X: np.ndarray, y: np.ndarray):
+def best_subset_ls(X: np.ndarray, y: np.ndarray):
     """
     Computes the best subset of features.
 
@@ -87,10 +88,10 @@ def best_subset(X: np.ndarray, y: np.ndarray):
     """
     scores = []
     subsets = []
-    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
     for i in subset_iterator(X.shape[1]):
-        ws = least_squares(X_train[:, i], y_train)
-        scores.append(R_squared(y_test, predict(X_test[:, i], ws)))
+        X_train, X_test, y_train, y_test = train_test_split(X[:, i], y, proportion=0.9, shuffle=False)
+        ws = least_squares(X_train, y_train)
+        scores.append(R_squared(y_test, predict(X_test, ws)))
         subsets.append(i)
 
     return scores, subsets
