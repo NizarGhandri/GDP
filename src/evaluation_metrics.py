@@ -68,14 +68,14 @@ def adjusted_R_squared(y: np.ndarray, y_hat: np.ndarray, n_features: int) -> flo
     :return: adjusted coefficient of determination (R²)
     """
     n = len(y)
-    assert (n > n_features + 1)
+    assert (n > n_features + 1)  # making sure that N > K + 1
     r_squared = R_squared(y, y_hat)
     return 1 - (1 - r_squared) * (n - 1) / (n - n_features - 1)
 
 
 def MSE(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Compute the Mean Square Error.
+    Computes the Mean Square Error.
 
     :param y: real data
     :param y_hat: prediction
@@ -97,7 +97,7 @@ def RMSE(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 def MAE(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Compute the Mean Absolute Error.
+    Computes the Mean Absolute Error.
 
     :param y: real data
     :param y_hat: prediction
@@ -109,7 +109,7 @@ def MAE(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 def theil_U(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Compute the Theil U statistic (scale invariant measure).
+    Computes the Theil U statistic (scale invariant measure).
 
     :param y: real data
     :param y_hat: prediction
@@ -128,13 +128,21 @@ def information_criteria(y: np.ndarray, y_hat: np.ndarray, n_features: int, ic_t
     :param ic_type: information criteria type, either 'akaike' or 'bayesian'
     :return: ic_type information criteria
     """
+    # Raise an error if no type is specified
     if ic_type is None:
         raise ValueError("Information Criteria type not defined. `ic_type` is None, must be 'akaike' or 'bayesian'.")
+
     e = y - y_hat
     n = len(e)
+
+    # Return the Akaike IC
     if ic_type == 'akaike':
         return np.log(e @ e.T / n) + 2 * n_features / n
+
+    # Return the Bayesian IC
     elif ic_type == 'bayesian':
         return np.log(e @ e.T / n) + n_features * np.log(n) / n
+
+    # Raise an error if IC type is neither Akaike od Bayesian
     else:
         raiseValueError("Invalid Information Criteria type. `ic_type` must be 'akaike' or 'bayesian'.")
