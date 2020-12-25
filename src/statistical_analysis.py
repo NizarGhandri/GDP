@@ -224,18 +224,23 @@ def general_to_simple(X: np.ndarray, y: np.ndarray) -> List[int]:
     """
     n, k = np.shape(X)
 
+    # list of features
     indices = list(range(k))
 
+    # ttest_result encloses the relevance of the feature in question
     ttest_result = False
 
+    # keep on deleting features while they are not relevant and there are still more than 1 feature remaining
     while (not ttest_result) and len(indices) > 1:
 
+        # keep only the features in indices
         X_temp = np.copy(X[:, indices])
 
+        # initialize the candidate feature to be removed and its r squared
         index_to_delete = indices[0]
-
         r_2 = -math.inf
 
+        # find feature whose removal yields the largest r_square
         for i in indices:
 
             new_indices = list(np.copy(indices))
@@ -250,6 +255,7 @@ def general_to_simple(X: np.ndarray, y: np.ndarray) -> List[int]:
                 index_to_delete = i
                 r_2 = r
 
+        # test the relevance of the feature to be removed
         beta = least_squares(X_temp, y)
         y_hat = predict(X_temp, beta)
 
@@ -258,75 +264,12 @@ def general_to_simple(X: np.ndarray, y: np.ndarray) -> List[int]:
         ttest_result = ttest(np.shape(X_temp), beta[index_to_delete], var[index_to_delete],
                              tolerance=0.95)
 
+        # if the feature is irrelevant, remove it from indices
         if not ttest_result:
             indices.remove(index_to_delete)
 
     return indices
 
-
-# def simple_to_general(X, y):
-#     """
-#     Computes the model from the simple to general approach.
-#
-#     :param X: The matrix of observables
-#     :param y: The outcome matrix
-#     :return: model from the simple to general approach
-#     """
-#
-#     shape = np.shape(X)
-#     xtemp2 = copy.copy(X)
-#     a = np.zeros(shape[1])
-#
-#     for f in range(shape[1] - 1):
-#         for i in range(shape[1] - f):
-#             if f == 0:
-#                 x0 = xtemp2[:, i]
-#                 x0 = x0.transpose()
-#                 x0 = np.expand_dims(x0, axis=1)
-#                 beta_reduced = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x0), x0)), np.transpose(x0)), y)
-#                 y_hat_reduced = np.dot(x0, beta_reduced)
-#                 a[i] = R_squared(y, y_hat_reduced)
-#
-#             else:
-#                 x1 = xtemp2[:, i]
-#                 x1 = np.expand_dims(x1, axis=1)
-#                 x2 = np.hstack((x0, x1))
-#                 beta_reduced = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x2), x2)), np.transpose(x2)), y)
-#                 y_hat_reduced = np.dot(x2, beta_reduced)
-#                 a[i] = R_squared(y, y_hat_reduced)
-#         if f == 0:
-#             stat_sign = False
-#             ind = np.argmax(a[:])
-#             x0 = xtemp2[:, ind]
-#             x0 = np.expand_dims(x0, axis=1)
-#
-#         else:
-#             ind = np.argmax(a[:])
-#             x1 = xtemp2[:, ind]
-#             x1 = np.expand_dims(x1, axis=1)
-#             x2 = np.hstack((x0, x1))
-#             beta_full = least_squares(x2, y)
-#             y_hat_full = np.dot(x2, beta_full)
-#             shapex2 = np.shape(x2)
-#             error = np.dot(np.transpose(y - np.dot(x2, beta_full)), y - np.dot(x2, beta_full)) / (
-#                     shapex2[0] - shapex2[1])
-#             var = np.linalg.inv(np.dot(np.transpose(x2), x2)) * error
-#             stat_sign = ttest(np.shape(x2), beta_full[f, 0], var[f, f], tolerance=0.95)
-#             del x1, beta_full, y_hat_full, var, error, shapex2
-#
-#         if stat_sign:
-#             return x2
-#         else:
-#             xtemp2 = np.delete(xtemp2, ind, axis=1)
-#             if f == 0:
-#                 r = 1
-#                 a = np.zeros(shape[1])
-#             else:
-#                 x0 = x2
-#                 a = np.zeros(shape[1])
-#
-#     return x0
-#
 
 def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
     """
@@ -339,17 +282,22 @@ def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
 
     n, k = np.shape(X)
 
+    # indices encloses the features to use
+    # remaining_indices encloses the features that are available but not in indices
     indices = []
     remaining_indices = list(range(k))
 
-    ttest_result = False
+    # ttest_result encloses the relevance of the feature in question
+    ttest_result = True
 
+    # while the feature in question is relevant and there are less than k features
     while ttest_result and len(indices) < k:
 
+        # initialize the feature to be added and its r squared
         index_to_add = indices[0]
-
         r_2 = -math.inf
 
+        # find the feature that yields the largest r squared if added
         for i in remaining_indices:
 
             new_indices = list(np.copy(indices))
@@ -364,11 +312,15 @@ def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
                 index_to_add = i
                 r_2 = r
 
+        # supposing it's relevant, add the feature
         indices.append(index_to_add)
 
+        # the first feature is always added, we only test relevance if it's 2nd or more
         if len(indices) > 1:
+            # keep only the features in indices
             X_temp = np.copy(X[:, indices])
 
+            # compute the relevance of the feature
             beta = least_squares(X_temp, y)
             y_hat = predict(X_temp, beta)
 
@@ -377,8 +329,8 @@ def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
             ttest_result = ttest(np.shape(X_temp), beta[index_to_delete], var[index_to_delete],
                                  tolerance=0.95)
 
+            # if the feature turn out to be irrelevant, remove it
             if not ttest_result:
-                # index to add is actually not relevant, delete it
                 indices.remove(index_to_add)
 
     return indices
