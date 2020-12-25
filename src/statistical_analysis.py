@@ -5,19 +5,10 @@ from itertools import chain, combinations
 from sklearn.linear_model import LinearRegression
 from scipy.stats import chi2
 from numpy import linalg as LA
+from src.evaluation_metrics import R_squared
+from src.regressions import least_squares
+from src.helpers import train_test_split, predict
 import copy
-
-def correlation_test(X, threshold=0.95):
-    """
-
-    :param X:
-    :param threshold:
-    :return:
-    """
-    # doesn't work yet
-    correlation_matrix = np.corrcoef(X)
-    correlation_matrix < threshold
-    return correlation_matrix
 
 
 def confidence_interval(x_shape, variable, var, tolerance=0.95):
@@ -92,6 +83,20 @@ def subset_iterator(X_columns):
     """
     rnge = range(X_columns)
     return chain(*map(lambda x: combinations(rnge, x), range(2, X_columns + 1)))
+
+
+
+def best_subset(X, y): 
+    scores = []
+    subsets = []
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle = False)
+    for i in subset_iterator(X.shape[1]):
+        ws = least_squares(X_train[:, i], y_train)
+        scores.append(R_squared(y_test, predict(X_test[:, i], ws)))
+        subsets.append(i)
+        
+    return scores, subsets
+
 
 
 
@@ -261,7 +266,6 @@ def general_to_simple(x,y,tolerance=0.95):
 
         if stat_sign:
             return xtemp2
-            break
         else:
             xtemp2 = np.delete(xtemp2, ind, axis=1)
             a=np.zeros(shape[1]-f)

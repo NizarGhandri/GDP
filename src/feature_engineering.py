@@ -22,9 +22,12 @@ def build_poly(x: np.ndarray, degree: int) -> np.ndarray:
     :param degree: degree
     :return: augmented features
     """
-    expanded = np.ones((x.shape[0], 1))
-    for idx in range(1, degree + 1): expanded = np.hstack((expanded, x ** idx))
-    return expanded
+    if degree: 
+        expanded = np.ones((x.shape[0], 1))
+        for idx in range(1, degree + 1): expanded = np.hstack((expanded, x ** idx))
+        return expanded
+    else: 
+        return x
 
 
 def build_log(x: np.ndarray) -> np.ndarray:
