@@ -4,7 +4,7 @@ from typing import Callable
 
 def dummy_variable(x: np.ndarray, predicate: Callable[[float], bool], column_list: list) -> np.ndarray:
     """
-    Add a dummy variable to the dataset.
+    Adds a dummy variable to the dataset.
 
     :param x: features
     :param predicate: a predicate function
