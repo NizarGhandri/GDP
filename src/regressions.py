@@ -3,13 +3,14 @@ import numpy as np
 
 def least_squares(X: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
-    Compute Least Squares Estimator. We use np.solve for more numerical stability.
+    Compute Least Squares Estimator.
 
     :param X: training features
     :param y: training labels
     :return: least squares weights
     """
     X_t = X.T
+    # We use np.solve instead of inverting matrices for more numerical stability.
     return np.linalg.solve(X_t.dot(X), X_t.dot(y))
 
 
