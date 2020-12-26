@@ -5,7 +5,7 @@ from numpy import linalg
 from scipy import stats
 from scipy.stats import chi2
 
-from src.regressions import least_squares
+from src.regressions import least_squares, ridge_regression
 from src.evaluation_metrics import *
 from src.helpers import *
 import math
@@ -62,7 +62,7 @@ def variance_least_squares_line(X: np.ndarray, y: np.ndarray, y_hat: np.ndarray)
     :param y_hat: predictions
     :return: array of variances for the predictd labels
     """
-    return standard_error_regression(y, y_hat, X.shape[1]) * (
+    return standard_error_regression(y, y_hat, X.shape[1]) * (1 + 
         np.reshape(np.diag(X @ np.linalg.inv(X.T @ X) @ X.T), (-1, 1)))
 
 
@@ -258,6 +258,66 @@ def general_to_simple(X: np.ndarray, y: np.ndarray) -> List[int]:
 
         # test the relevance of the feature to be removed
         beta = least_squares(X_temp, y)
+        y_hat = predict(X_temp, beta)
+
+        var = variance_least_squares_weights(X_temp, y, y_hat)
+
+        ttest_result = ttest(np.shape(X_temp), beta[indices.index(index_to_delete)],
+                             var[indices.index(index_to_delete)], tolerance=0.95)
+
+        # if the feature is irrelevant, remove it from indices
+        if not ttest_result:
+            indices.remove(index_to_delete)
+
+    return indices
+
+
+def general_to_simple_ridge(X: np.ndarray, y: np.ndarray) -> List[int]:
+    """
+    Finds the relevant features using the general to simple approach.
+
+    :param X: The matrix of observables
+    :param y: The outcome matrix
+    :return: list of indices
+    """
+    n, k = np.shape(X)
+
+    # list of features
+    indices = list(range(k))
+
+    # ttest_result encloses the relevance of the feature in question
+    ttest_result = False
+
+    # keep on deleting features while they are not relevant and there are still more than 1 feature remaining
+    while (not ttest_result) and len(indices) > 1:
+
+        # initialize the candidate feature to be removed and its r squared
+        index_to_delete = indices[0]
+        r_2 = -math.inf
+
+        # find feature whose removal yields the largest r_square
+        for i in indices:
+            new_indices = list(np.copy(indices))
+            new_indices.remove(i)
+
+            x0 = X[:, new_indices]
+
+            beta_reduced = least_squares(x0, y)
+
+            y_hat_reduced = predict(x0, beta_reduced)
+            r = R_squared(y, y_hat_reduced)
+            if r > r_2:
+                index_to_delete = i
+                r_2 = r
+
+        # keep only the features in indices
+        X_temp = np.copy(X[:, indices])
+        
+        #cv
+        lambda_, _ = cross_val_ridge(X_temp, y, max_degree=0)
+
+        # test the relevance of the feature to be removed
+        beta = ridge_resression(X_temp, y, lambda_)
         y_hat = predict(X_temp, beta)
 
         var = variance_least_squares_weights(X_temp, y, y_hat)
