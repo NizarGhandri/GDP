@@ -314,10 +314,11 @@ def general_to_simple_ridge(X: np.ndarray, y: np.ndarray) -> List[int]:
         X_temp = np.copy(X[:, indices])
         
         #cv
-        lambda_, _ = cross_val_ridge(X_temp, y, max_degree=0)
+        if X.shape[1] != 0: 
+            lambda_, _ = cross_val_ridge(X_temp, y, max_degree=10, plot=False)
 
         # test the relevance of the feature to be removed
-        beta = ridge_resression(X_temp, y, lambda_)
+        beta = ridge_regression(X_temp, y, lambda_)
         y_hat = predict(X_temp, beta)
 
         var = variance_least_squares_weights(X_temp, y, y_hat)
