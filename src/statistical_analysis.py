@@ -10,6 +10,8 @@ from src.evaluation_metrics import *
 from src.helpers import *
 import math
 
+import copy
+
 
 def confidence_interval(n: int, k: int, variable: np.ndarray, variance: np.ndarray,
                         percentage: float = 0.95) -> Tuple[np.ndarray, np.ndarray]:
