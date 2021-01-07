@@ -62,8 +62,9 @@ def variance_least_squares_line(X: np.ndarray, y: np.ndarray, y_hat: np.ndarray)
     :param y_hat: predictions
     :return: array of variances for the predictd labels
     """
-    return standard_error_regression(y, y_hat, X.shape[1]) * (1 + 
-        np.reshape(np.diag(X @ np.linalg.inv(X.T @ X) @ X.T), (-1, 1)))
+    return standard_error_regression(y, y_hat, X.shape[1]) * (1 +
+                                                              np.reshape(np.diag(X @ np.linalg.inv(X.T @ X) @ X.T),
+                                                                         (-1, 1)))
 
 
 def subset_iterator(n_features: int):
@@ -312,9 +313,9 @@ def general_to_simple_ridge(X: np.ndarray, y: np.ndarray) -> List[int]:
 
         # keep only the features in indices
         X_temp = np.copy(X[:, indices])
-        
-        #cv
-        if X.shape[1] != 0: 
+
+        # cv
+        if X.shape[1] != 0:
             lambda_, _ = cross_val_ridge(X_temp, y, max_degree=10, plot=False)
 
         # test the relevance of the feature to be removed
@@ -333,7 +334,7 @@ def general_to_simple_ridge(X: np.ndarray, y: np.ndarray) -> List[int]:
     return indices
 
 
-def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
+def simple_to_general_new(X: np.ndarray, y: np.ndarray) -> List[int]:
     """
     Finds the relevant features using the simple to general approach.
 
@@ -396,3 +397,55 @@ def simple_to_general(X: np.ndarray, y: np.ndarray) -> List[int]:
                 indices.remove(index_to_add)
 
     return indices
+
+
+def simple_to_general(X, y):
+    shape = np.shape(X)
+    xtemp2 = copy.copy(X)
+    a = np.zeros(shape[1])
+
+    for f in range(shape[1] - 1):
+        for i in range(shape[1] - f):
+            if f == 0:
+                x0 = xtemp2[:, i]
+                x0 = x0.transpose()
+                x0 = np.expand_dims(x0, axis=1)
+                beta_reduced = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x0), x0)), np.transpose(x0)), y)
+                y_hat_reduced = np.dot(x0, beta_reduced)
+                a[i] = R_squared(y, y_hat_reduced)
+
+            else:
+                x1 = xtemp2[:, i]
+                x1 = np.expand_dims(x1, axis=1)
+                x2 = np.hstack((x0, x1))
+                beta_reduced = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x2), x2)), np.transpose(x2)), y)
+                y_hat_reduced = np.dot(x2, beta_reduced)
+                a[i] = R_squared(y, y_hat_reduced)
+        if f == 0:
+            stat_sign = False
+            ind = np.argmax(a[:])
+        else:
+            ind = np.argmax(a[:])
+            x1 = xtemp2[:, ind]
+            x1 = np.expand_dims(x1, axis=1)
+            x2 = np.hstack((x0, x1))
+            beta_full = least_squares(x2, y)
+            y_hat_full = np.dot(x2, beta_full)
+            shapex2 = np.shape(x2)
+            error = np.dot(np.transpose(y - np.dot(x2, beta_full)), y - np.dot(x2, beta_full)) / (
+                    shapex2[0] - shapex2[1])
+            var = np.linalg.inv(np.dot(np.transpose(x2), x2)) * error
+            stat_sign = ttest(np.shape(x2), beta_full[f, 0], var[f, f], tolerance=0.95)
+            del x1, beta_full, y_hat_full, var, error, shapex2
+        if stat_sign:
+            return x2
+        else:
+            xtemp2 = np.delete(xtemp2, ind, axis=1)
+            if f == 0:
+                r = 1
+                a = np.zeros(shape[1])
+            else:
+                x0 = x2
+                a = np.zeros(shape[1])
+
+    return x0
